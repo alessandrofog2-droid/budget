@@ -163,7 +163,7 @@ select option{background:var(--card);color:var(--text)}
       <input class="input-fld" type="password" id="auth-password" placeholder="Password" autocomplete="current-password">
       <button class="btn-primary" id="auth-submit" onclick="doAuth()">Accedi</button>
     </div>
-    <div class="auth-config-link" id="config-link" onclick="openConfigModal()">⚙️ Configura connessione cloud</div>
+    <div class="auth-config-link" id="config-link" onclick="openConfigModal()" style="margin-top:20px;padding:12px;background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);color:var(--text2)">⚙️ Configura connessione cloud</div>
   </div>
 </div>
 
@@ -171,11 +171,11 @@ select option{background:var(--card);color:var(--text)}
 <div class="modal" id="config-modal">
   <div class="sheet">
     <div class="sheet-title">⚙️ Configurazione cloud</div>
-    <div class="sheet-desc">Incolla i due valori del tuo progetto Supabase (vedi la guida, Parte 2). Vengono salvati solo su questo dispositivo.</div>
+    <div class="sheet-desc">Incolla la tua <strong>Publishable key</strong> di Supabase (Settings → API Keys → Publishable key). L'URL del progetto è già preimpostato.</div>
     <label class="input-lbl">Project URL</label>
-    <input class="input-fld" id="cfg-url" placeholder="https://xxxxx.supabase.co">
-    <label class="input-lbl">anon public key</label>
-    <input class="input-fld" id="cfg-key" placeholder="eyJ...">
+    <input class="input-fld" id="cfg-url" placeholder="https://xxxxx.supabase.co" value="https://sklrurcxisfwjfubdnaj.supabase.co" readonly style="opacity:.6">
+    <label class="input-lbl">Publishable key</label>
+    <input class="input-fld" id="cfg-key" placeholder="sb_publishable_...">
     <button class="btn-primary" onclick="saveConfig()">Salva configurazione</button>
     <button class="btn-text" onclick="closeConfigModal()">Annulla</button>
   </div>
