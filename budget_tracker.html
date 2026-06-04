@@ -130,7 +130,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .cm-hint{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.4}
 select option{background:var(--card);color:var(--text)}
 /* Auth gate */
-.auth-gate{display:none;position:fixed;inset:0;background:var(--bg);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.auth-gate{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .auth-gate.open{display:flex}
 .auth-card{width:100%;max-width:380px}
 .auth-logo{font-size:40px;text-align:center;margin-bottom:8px}
@@ -168,7 +168,7 @@ select option{background:var(--card);color:var(--text)}
 </div>
 
 <!-- CONFIG MODAL (Supabase URL + key) -->
-<div class="modal" id="config-modal">
+<div class="modal" id="config-modal" style="z-index:400">
   <div class="sheet">
     <div class="sheet-title">⚙️ Configurazione cloud</div>
     <div class="sheet-desc">Incolla la tua <strong>Publishable key</strong> di Supabase (Settings → API Keys → Publishable key). L'URL del progetto è già preimpostato.</div>
