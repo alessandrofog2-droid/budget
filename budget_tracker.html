@@ -237,6 +237,8 @@ select option{background:var(--card);color:var(--text)}
       <div class="form-row"><label>Importo €</label><input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div>
       <div class="form-row"><label>Categoria</label><select id="f-cat"></select></div>
       <div class="form-row"><label>Data</label><input type="date" id="f-date"></div>
+      <div class="form-row"><label>Mesi coperti</label><input type="number" id="f-months" value="1" min="1" max="60" step="1" inputmode="numeric"></div>
+      <div style="padding:0 14px 10px;font-size:11px;color:var(--text3);line-height:1.4">Lascia 1 per le spese normali. Metti 2, 3… se il pagamento copre più mesi (es. pacchetto lezioni, bolletta bimestrale).</div>
     </div>
     <div class="form-actions">
       <button class="btn-cancel" onclick="closeForm()">Annulla</button>
@@ -558,7 +560,7 @@ function renderEntries(entries){
     const cat=CATS.find(c=>c.name===e.cat)||{icon:'💸',color:'#888',fixed:false};
     const d=new Date(e.date+'T00:00:00');const ds=d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'});
     const scanned=e.scanned?'<span style="font-size:10px;background:#E1F5EE;color:#0F6E56;padding:1px 5px;border-radius:3px;margin-left:4px">📷 AI</span>':'';
-    return `<div class="entry"><div class="entry-icon" style="background:${cat.color}22">${cat.icon}</div><div class="entry-info"><div class="entry-name">${e.desc||e.cat}${scanned}</div><div class="entry-meta">${e.cat}${cat.fixed?` · <b style="color:#185FA5">fissa</b>`:''} · ${ds}</div></div><div class="entry-amt">-${fmt(e.amount)}</div><button class="entry-del" onclick="deleteEntry('${e.id}')">✕</button></div>`;
+    return `<div class="entry"><div class="entry-icon" style="background:${cat.color}22">${cat.icon}</div><div class="entry-info"><div class="entry-name">${e.desc||e.cat}${scanned}</div><div class="entry-meta">${e.cat}${cat.fixed?` · <b style="color:#185FA5">fissa</b>`:''} · ${ds}${(e.mesi||1)>1?` · <b style="color:#8E44AD">${e.mesi} mesi · ${fmt(e.amount/e.mesi)}/mese</b>`:''}</div></div><div class="entry-amt">-${fmt(e.amount)}</div><button class="entry-del" onclick="deleteEntry('${e.id}')">✕</button></div>`;
   }).join('');
 }
 function renderCatSummary(entries){
@@ -572,15 +574,16 @@ function renderCatSummary(entries){
 // ── ENTRY FORM ──────────────────────────────────────────
 function toggleForm(fromScan=false){
   const f=document.getElementById('add-form');const show=f.style.display==='none';f.style.display=show?'block':'none';
-  if(show&&!fromScan){lastReceiptImage=null;document.getElementById('receipt-preview').style.display='none';document.getElementById('ai-badge').style.display='none';document.getElementById('f-date').value=new Date().toISOString().split('T')[0];document.getElementById('f-desc').value='';document.getElementById('f-amount').value='';setTimeout(()=>document.getElementById('f-amount').focus(),100);}
+  if(show&&!fromScan){lastReceiptImage=null;document.getElementById('receipt-preview').style.display='none';document.getElementById('ai-badge').style.display='none';document.getElementById('f-date').value=new Date().toISOString().split('T')[0];document.getElementById('f-desc').value='';document.getElementById('f-amount').value='';document.getElementById('f-months').value=1;setTimeout(()=>document.getElementById('f-amount').focus(),100);}
 }
-function closeForm(){document.getElementById('add-form').style.display='none';document.getElementById('receipt-preview').style.display='none';document.getElementById('ai-badge').style.display='none';lastReceiptImage=null;}
+function closeForm(){document.getElementById('f-months').value=1;document.getElementById('add-form').style.display='none';document.getElementById('receipt-preview').style.display='none';document.getElementById('ai-badge').style.display='none';lastReceiptImage=null;}
 function saveEntry(){
   const desc=document.getElementById('f-desc').value.trim();const amount=parseFloat(document.getElementById('f-amount').value)||0;
   const cat=document.getElementById('f-cat').value;const date=document.getElementById('f-date').value;
   if(!amount){document.getElementById('f-amount').focus();return;}
   if(!store.months[currentKey])store.months[currentKey]=[];
-  store.months[currentKey].push({id:Date.now().toString(),desc:desc||cat,amount,cat,date:date||new Date().toISOString().split('T')[0],scanned:!!lastReceiptImage});
+  let mesi=parseInt(document.getElementById('f-months').value)||1;if(mesi<1)mesi=1;if(mesi>60)mesi=60;
+  store.months[currentKey].push({id:Date.now().toString(),desc:desc||cat,amount,cat,date:date||new Date().toISOString().split('T')[0],scanned:!!lastReceiptImage,mesi:mesi});
   closeForm();render();scheduleSave();
 }
 function deleteEntry(id){if(!confirm('Eliminare questa spesa?'))return;store.months[currentKey]=getData(currentKey).filter(e=>e.id!==id);render();scheduleSave();}
@@ -619,8 +622,8 @@ function fillFormFromReceipt(data,previewUrl){
 function exportCSV(){
   const entries=getData(currentKey);if(!entries.length){alert('Nessuna spesa da esportare.');return;}
   const stip=getStipendio();const total=entries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  let csv='Data,Descrizione,Categoria,Fissa,Scansionata,Importo (€)\n';
-  [...entries].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(e=>{const fixed=CATS.find(c=>c.name===e.cat)?.fixed?'Sì':'No';csv+=`${e.date},"${(e.desc||'').replace(/"/g,'""')}","${e.cat}",${fixed},${e.scanned?'Sì':'No'},${parseFloat(e.amount).toFixed(2)}\n`;});
+  let csv='Data,Descrizione,Categoria,Fissa,Scansionata,Importo (€),Mesi coperti,Quota mensile (€)\n';
+  [...entries].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(e=>{const fixed=CATS.find(c=>c.name===e.cat)?.fixed?'Sì':'No';csv+=`${e.date},"${(e.desc||'').replace(/"/g,'""')}","${e.cat}",${fixed},${e.scanned?'Sì':'No'},${parseFloat(e.amount).toFixed(2)},${e.mesi||1},${(parseFloat(e.amount)/(e.mesi||1)).toFixed(2)}\n`;});
   csv+=`\nTotale uscite,,,,,"${total.toFixed(2)}"\nStipendio,,,,,"${stip.toFixed(2)}"\nSaldo,,,,,"${(stip-total).toFixed(2)}"`;
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const [yr,mo]=currentKey.split('-');a.href=url;a.download=`budget_${MONTHS[parseInt(mo)-1]}_${yr}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
